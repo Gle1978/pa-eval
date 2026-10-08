@@ -10,13 +10,24 @@
 <p id="msg">กำลังเปิดระบบประเมินผลสัมฤทธิ์ของงาน…</p>
 <script>
 var API = "https://script.google.com/macros/s/AKfycbzd83zsJXkiuWtIsDc9184P4YOe2j4h9YkOw4xBda85uc88r4HySqw5PsDqi-2_RNj3/exec";
-fetch(API + "?raw=1", {credentials: "omit"})
-  .then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); })
-  .then(function (h) {
-    h = h.replace("<head>", "<head><script>window.API_URL=" + JSON.stringify(API) + ";<\/script>");
-    document.open(); document.write(h); document.close();
-  })
-  .catch(function () { document.getElementById("msg").textContent = "เปิดระบบไม่สำเร็จ กรุณาตรวจสอบอินเทอร์เน็ต แล้วกดรีเฟรชหน้านี้อีกครั้ง"; });
+var KEY = "pa-app-html";
+function show(h) {
+  h = h.replace("<head>", "<head><title>ระบบประเมินผลสัมฤทธิ์ของงาน สายวิชาการ</title><script>window.API_URL=" + JSON.stringify(API) + ";<\/script>");
+  document.open(); document.write(h); document.close();
+}
+function get(n) {
+  return fetch(API + "?raw=1", {credentials: "omit", cache: "no-store"})
+    .then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); })
+    .catch(function (e) {
+      if (n > 0) return new Promise(function (ok) { setTimeout(ok, 2000); }).then(function () { return get(n - 1); });
+      throw e;
+    });
+}
+var cached = null;
+try { cached = localStorage.getItem(KEY); } catch (e) {}
+var fresh = get(3).then(function (h) { try { localStorage.setItem(KEY, h); } catch (e) {} return h; });
+if (cached) show(cached);
+else fresh.then(show).catch(function () { document.getElementById("msg").textContent = "เปิดระบบไม่สำเร็จ กรุณาตรวจสอบอินเทอร์เน็ต แล้วกดรีเฟรชหน้านี้อีกครั้ง"; });
 </script>
 </body>
 </html>
